@@ -32,6 +32,14 @@ describe("#timeword", () => {
 		});
 	});
 
+	describe("determining single digit minute", () => {
+		test("should return 'one oh seven pm' if time is 13-07", () => {
+			expect(timeWord("13-07")).toEqual("one oh seven pm");
+		});
+		test("should return 'ten oh one am' if time is 10-01", () => {
+			expect(timeWord("10-01")).toEqual("ten oh one am");
+		});
+	});
 	describe("determining teen minute", () => {
 		test("should return 'two fourteen pm' if time is 14-14", () => {
 			expect(timeWord("14-14")).toEqual("two fourteen pm");
