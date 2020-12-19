@@ -304,7 +304,7 @@ let payload = jwt.verify(token, SECRET_KEY);
 
 Based on the documentation & code for the POST /auth/register route, it is impossible for a user to be an admin:
 
-```
+```JavaScript
 /** Register user; return token.
  *
  *  Accepts {username, first_name, last_name, email, phone, password}.
