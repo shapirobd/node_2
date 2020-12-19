@@ -340,7 +340,7 @@ router.post("/register", async function (req, res, next) {
 });
 ```
 
-The documentation says to include all fields except for admin, and the code says the same as well. The test suite bypasses this issue by including admin in the request body when creating sample users:
+The documentation says to include all fields except for admin, and the code says the same as well. The test suite bypasses this issue by including admin in the insert query when creating sample users:
 
 ```JavaScript
 let sampleUsers = [
