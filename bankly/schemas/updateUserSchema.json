@@ -1,0 +1,52 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema",
+	"$id": "http://example.com/example.json",
+	"type": "object",
+	"title": "The root schema",
+	"description": "The root schema comprises the entire JSON document.",
+	"default": {},
+	"examples": [
+		{
+			"first_name": "Bob",
+			"last_name": "Smith",
+			"phone": 9195555555,
+			"email": "email@gmail.com"
+		}
+	],
+	"required": [],
+	"properties": {
+		"first_name": {
+			"$id": "#/properties/first_name",
+			"type": "string",
+			"title": "The first_name schema",
+			"description": "An explanation about the purpose of this instance.",
+			"default": "",
+			"examples": ["Bob"]
+		},
+		"last_name": {
+			"$id": "#/properties/last_name",
+			"type": "string",
+			"title": "The last_name schema",
+			"description": "An explanation about the purpose of this instance.",
+			"default": "",
+			"examples": ["Smith"]
+		},
+		"phone": {
+			"$id": "#/properties/phone",
+			"type": "integer",
+			"title": "The phone schema",
+			"description": "An explanation about the purpose of this instance.",
+			"default": 0,
+			"examples": [9195555555]
+		},
+		"email": {
+			"$id": "#/properties/email",
+			"type": "string",
+			"title": "The email schema",
+			"description": "An explanation about the purpose of this instance.",
+			"default": "",
+			"examples": ["email@gmail.com"]
+		}
+	},
+	"additionalProperties": false
+}

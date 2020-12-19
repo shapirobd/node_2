@@ -62,17 +62,22 @@ class User {
 		);
 
 		const user = result.rows[0];
-		if (user && (await bcrypt.compare(password, user.password))) {
-			return user;
-		} else {
-			throw new ExpressError("Cannot authenticate", 401);
-		}
-		// - - - - - FIX FOR BUG NO. 1 - - - - -
 		// if (user && (await bcrypt.compare(password, user.password))) {
 		// 	return user;
-		// }
-		// throw new ExpressError("Cannot authenticate", 401);
+		// } else {
+		// 	throw new ExpressError("Cannot authenticate", 401);
+		// } // <-- BUG NO. 1 (1)
+
+		// *************************************
+		// - - - - - FIX FOR BUG NO. 1 (1) - - - - -
+		//
+		if (user && (await bcrypt.compare(password, user.password))) {
+			return user;
+		}
+		throw new ExpressError("Cannot authenticate", 401);
+		//
 		// - - - - - - - - - - - - - - - - - - -
+		// **************************************
 	}
 
 	/** Returns list of user info:
@@ -90,8 +95,11 @@ class User {
 		//         phone
 		//     FROM users
 		//     ORDER BY username`
-		// );
+		// ); // <-- BUG NO. 2
+
+		// *************************************
 		// - - - - - FIX FOR BUG NO. 2 - - - - -
+		//
 		const result = await db.query(
 			`SELECT username,
 		        first_name,
@@ -99,7 +107,9 @@ class User {
 		    FROM users
 		    ORDER BY username`
 		);
+		//
 		// - - - - - - - - - - - - - - - - - - -
+		// **************************************
 		return result.rows;
 	}
 
@@ -120,13 +130,19 @@ class User {
          WHERE username = $1`,
 			[username]
 		);
-
 		const user = result.rows[0];
 
 		if (!user) {
-			new ExpressError("No such user", 404);
-		}
+			// new ExpressError("No such user", 404); // <-- BUG NO. 3
 
+			// *************************************
+			// - - - - - FIX FOR BUG NO. 3 - - - - -
+			//
+			throw new ExpressError("No such user", 404);
+			//
+			// - - - - - - - - - - - - - - - - - - -
+			// *************************************
+		}
 		return user;
 	}
 
@@ -172,7 +188,6 @@ class User {
 		if (!user) {
 			throw new ExpressError("No such user", 404);
 		}
-
 		return true;
 	}
 }

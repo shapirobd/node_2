@@ -10,6 +10,8 @@ const bcrypt = require("bcrypt");
 const createToken = require("../helpers/createToken");
 const jwt = require("jsonwebtoken");
 const { SECRET_KEY } = require("../config");
+const { authUser } = require("../middleware/auth");
+const { TestScheduler } = require("jest");
 
 // tokens for our sample users
 const tokens = {};
@@ -34,6 +36,21 @@ beforeEach(async function () {
 	}
 });
 
+// **************************************
+// - - - - - TEST FOR BUG NO. 1 - - - - -
+//
+describe("MIDDLEWARE authUser()", () => {
+	test("should claim token invalid if signature invalid", async () => {
+		tokens.u1 = tokens.u1.slice(0, -1);
+		const response = await request(app)
+			.get("/users")
+			.send({ _token: tokens.u1 });
+		expect(response.statusCode).toBe(401);
+	});
+});
+//
+// - - - - - - - - - - - - - - - - - - - -
+// ***************************************
 describe("POST /auth/register", function () {
 	test("should allow a user to register in", async function () {
 		const response = await request(app).post("/auth/register").send({
@@ -82,19 +99,23 @@ describe("POST /auth/login", function () {
 		expect(username).toBe("u1");
 		expect(admin).toBe(false);
 	});
+	// **************************************
 	// - - - - - TEST FOR BUG NO. 1 - - - - -
-	// test("should throw 401 error if invalid password", async () => {
-	// 	const response = await request(app).post("/auth/login").send({
-	// 		username: "u1",
-	// 		password: "INVALIDPASSWORD",
-	// 	});
-	// 	expect(response.statusCode).toBe(401);
-	// 	expect(response.body).toEqual({
-	// 		status: 401,
-	// 		message: "Cannot authenticate",
-	// 	});
-	// });
+	//
+	test("should throw 401 error if invalid password", async () => {
+		const response = await request(app).post("/auth/login").send({
+			username: "u1",
+			password: "INVALIDPASSWORD",
+		});
+		expect(response.statusCode).toBe(401);
+		expect(response.body).toEqual({
+			status: 401,
+			message: "Cannot authenticate",
+		});
+	});
+	//
 	// - - - - - - - - - - - - - - - - - - - -
+	// ***************************************
 });
 
 describe("GET /users", function () {
@@ -109,27 +130,31 @@ describe("GET /users", function () {
 			.send({ _token: tokens.u1 });
 		expect(response.statusCode).toBe(200);
 		expect(response.body.users.length).toBe(3);
+		// **************************************
 		// - - - - - TEST FOR BUG NO. 2 - - - - -
-		// expect(response.body).toEqual({
-		// 	users: [
-		// 		{
-		// 			username: "u1",
-		// 			first_name: "fn1",
-		// 			last_name: "ln1",
-		// 		},
-		// 		{
-		// 			username: "u2",
-		// 			first_name: "fn2",
-		// 			last_name: "ln2",
-		// 		},
-		// 		{
-		// 			username: "u3",
-		// 			first_name: "fn3",
-		// 			last_name: "ln3",
-		// 		},
-		// 	],
-		// });
+		//
+		expect(response.body).toEqual({
+			users: [
+				{
+					username: "u1",
+					first_name: "fn1",
+					last_name: "ln1",
+				},
+				{
+					username: "u2",
+					first_name: "fn2",
+					last_name: "ln2",
+				},
+				{
+					username: "u3",
+					first_name: "fn3",
+					last_name: "ln3",
+				},
+			],
+		});
+		//
 		// - - - - - - - - - - - - - - - - - - - -
+		// ***************************************
 	});
 });
 
@@ -152,6 +177,22 @@ describe("GET /users/[username]", function () {
 			phone: "phone1",
 		});
 	});
+	// **************************************
+	// - - - - - TEST FOR BUG NO. 3 - - - - -
+	//
+	test("should throw 404 if username not found", async () => {
+		const response = await request(app)
+			.get("/users/NONEXISTANTUSERNAME")
+			.send({ _token: tokens.u1 });
+		expect(response.statusCode).toBe(404);
+		expect(response.body).toEqual({
+			status: 404,
+			message: "No such user",
+		});
+	});
+	//
+	// - - - - - - - - - - - - - - - - - - - -
+	// ***************************************
 });
 
 describe("PATCH /users/[username]", function () {
@@ -166,6 +207,27 @@ describe("PATCH /users/[username]", function () {
 			.send({ _token: tokens.u2 }); // wrong user!
 		expect(response.statusCode).toBe(401);
 	});
+	// **************************************
+	// - - - - - TEST FOR BUG NO. 4 - - - - -
+	//
+	test("should patch data if right user but not admin", async () => {
+		const response = await request(app)
+			.patch("/users/u1")
+			.send({ _token: tokens.u1, first_name: "new-fn1" });
+		expect(response.statusCode).toBe(200);
+		expect(response.body.user).toEqual({
+			username: "u1",
+			first_name: "new-fn1",
+			last_name: "ln1",
+			email: "email1",
+			phone: "phone1",
+			admin: false,
+			password: expect.any(String),
+		});
+	});
+	//
+	// - - - - - - - - - - - - - - - - - - - -
+	// ***************************************
 
 	test("should patch data if admin", async function () {
 		const response = await request(app)
@@ -182,14 +244,19 @@ describe("PATCH /users/[username]", function () {
 			password: expect.any(String),
 		});
 	});
-
+	// **************************************
+	// - - - - - TEST FOR BUG NO. 5 - - - - -
+	//  (was already written, but was passing due to BUG NO. 4)
+	//
 	test("should disallowing patching not-allowed-fields", async function () {
 		const response = await request(app)
 			.patch("/users/u1")
 			.send({ _token: tokens.u1, admin: true });
 		expect(response.statusCode).toBe(401);
 	});
-
+	//
+	// - - - - - - - - - - - - - - - - - - -
+	// **************************************
 	test("should return 404 if cannot find", async function () {
 		const response = await request(app)
 			.patch("/users/not-a-user")

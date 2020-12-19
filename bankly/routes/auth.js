@@ -53,8 +53,16 @@ router.post("/register", async function (req, res, next) {
 router.post("/login", async function (req, res, next) {
 	try {
 		const { username, password } = req.body;
-		let user = User.authenticate(username, password);
-		// let user = await User.authenticate(username, password); <-- THE FIX FOR BUG NO. 1
+		// let user = User.authenticate(username, password); // <-- BUG NO. 1 (2)
+
+		// *************************************
+		// - - - - - FIX FOR BUG NO. 1 (2) - - - - -
+		//
+		let user = await User.authenticate(username, password);
+		//
+		// - - - - - - - - - - - - - - - - - - -
+		// *************************************
+
 		const token = createTokenForUser(username, user.admin);
 		return res.json({ token });
 	} catch (err) {
